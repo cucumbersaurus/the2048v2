@@ -18,4 +18,7 @@ enum class Number(val value: Int, val color: RGBA) {
     FOURTEEN(32768, RGBA(9, 43, 202)),
     FIFTEEN(65536, RGBA(181, 37, 188)),
     SIXTEEN(131072, RGBA(166, 34, 172));
+
+    fun next() = values()[(ordinal + 1) % values().size]
+
 }
