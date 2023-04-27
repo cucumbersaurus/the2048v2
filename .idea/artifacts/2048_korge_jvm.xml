@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="2048_korge-jvm">
+    <output-path>$PROJECT_DIR$/build/libs</output-path>
+    <root id="archive" name="2048_korge-jvm.jar">
+      <element id="module-output" name="korge_2048.jvmMain" />
+    </root>
+  </artifact>
+</component>
