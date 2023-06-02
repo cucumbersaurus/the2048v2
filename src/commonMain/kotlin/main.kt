@@ -21,9 +21,13 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlin.random.*
 import com.soywiz.korge.tween.*
+import com.soywiz.korge.view.tween.*
+import database.*
 
 lateinit var loadFont : Deferred<Unit>
 lateinit var loadImg : Deferred<Unit>
+var animator : Job = launch(Dispatchers.Main){}
+
 lateinit var font:BitmapFont
 lateinit var restartImg:Bitmap
 lateinit var undoImg:Bitmap
@@ -40,6 +44,9 @@ var map = PositionMap()
 var isAnimationRunning = false
 var isGameOver = false
 
+val score = ObservableProperty(0)
+val best = ObservableProperty(0)
+
 suspend fun main() = Korge(width = 480, height = 640, title = "The2048", bgcolor = RGBA(253, 247, 240)) {
 
 
@@ -49,6 +56,21 @@ suspend fun main() = Korge(width = 480, height = 640, title = "The2048", bgcolor
         restartImg = resourcesVfs["restart.png"].readBitmap()
         undoImg = resourcesVfs["undo.png"].readBitmap()
     }
+
+    //best.update(...)
+
+    score.observe {
+        if (it > best.value) best.update(it)
+    }
+    best.observe {
+        //TODO: here we'll update the value in the storage
+    }
+
+    Database.connect()
+    Database.writeScore(3, "213")
+    print("----------------------------------\n")
+    print(Database.readScore(1).toString()+"\n")
+    print(BestScoreData.getBest())
 
 
     cellSize = views.virtualWidth/5.0
@@ -102,6 +124,7 @@ suspend fun main() = Korge(width = 480, height = 640, title = "The2048", bgcolor
             this@Korge.restart()
         }
     }
+    /*
     val undoBlock = container {
         val background = roundRect(btnSize, btnSize, 5.0, fill = RGBA(185, 174, 160))
         image(undoImg) {
@@ -111,6 +134,7 @@ suspend fun main() = Korge(width = 480, height = 640, title = "The2048", bgcolor
         alignTopToTopOf(restartBlock)
         alignRightToLeftOf(restartBlock, 5.0)
     }
+    */
 
     loadFont.await()
     text("2048", cellSize*0.4, Colors.WHITE, font){
@@ -132,6 +156,10 @@ suspend fun main() = Korge(width = 480, height = 640, title = "The2048", bgcolor
         alignment = TextAlignment.MIDDLE_CENTER
         alignTopToTopOf(bgBest, 12.0)
         centerXOn(bgBest)
+        //alignLeftToLeftOf(bgBest, -25)
+        best.observe {
+            text = it.toString()
+        }
     }
 
     text("점수", cellSize * 0.25, RGBA(239, 226, 210), font) {
@@ -143,7 +171,11 @@ suspend fun main() = Korge(width = 480, height = 640, title = "The2048", bgcolor
         setTextBounds(Rectangle(10.0, 0.0, bgScore.width, cellSize - 24.0))
         alignment = TextAlignment.MIDDLE_CENTER
         centerXOn(bgScore)
+        //alignLeftToLeftOf(bgScore, -25)
         alignTopToTopOf(bgScore, 12.0)
+        score.observe {
+            text = it.toString()
+        }
     }
 
     generateBlock()
@@ -177,17 +209,11 @@ fun rowY(number: Int) = topIndent + 10 + (cellSize + 10) * number
 
 fun Container.createNewBlockWithId(id: Int, number: Number, position: Position) {
     blocks[id] = block(number).position(columnX(position.x), rowY(position.y))
-    //isAnimationRunning = true
     launchImmediately(Dispatchers.Default) {
         animateSequence {
-            sequenceLazy {
-                animateScale(blocks[id]!!)
-
-            }
-            //isAnimationRunning = false
+            animateScale(blocks[id]!!)
         }
     }
-    ////////////////////////////////////////////////////////////////////////////
 }
 
 fun Container.createNewBlock(number: Number, position: Position): Int {
@@ -205,6 +231,7 @@ fun Container.generateBlock() {
 
 fun Stage.moveBlocksTo(direction: Direction) {
     if (isAnimationRunning) return
+    if(animator.isActive) return
     if (!map.hasAvailableMoves()) {
         if (!isGameOver) {
             isGameOver = true
@@ -215,21 +242,26 @@ fun Stage.moveBlocksTo(direction: Direction) {
         }
         return
     }
+    animator.cancel()
+    isAnimationRunning = true
     val moves = mutableListOf<Pair<Int, Position>>()
     val merges = mutableListOf<Triple<Int, Int, Position>>()
 
     val newMap = calculateNewMap(map.copy(), direction, moves, merges)
 
-    if (isAnimationRunning) return
     if (map != newMap) {
-        isAnimationRunning = true
+        //isAnimationRunning = true
         showAnimation(moves, merges) {
             // when animation ends
             map = newMap
             generateBlock()
-            isAnimationRunning = false
+            //isAnimationRunning = false
+
+            val points = merges.sumOf { numberFor(it.first).value }
+            score.update(score.value + points)
         }
     }
+    isAnimationRunning = false
 }
 
 fun Container.showGameOver(onRestart: () -> Unit) = container {
@@ -270,8 +302,10 @@ fun Container.restart() {
     map = PositionMap()
     blocks.values.forEach { it.removeFromParent() }
     blocks.clear()
+    score.update(0)
+    //runBlocking { animator.cancelAndJoin() }
     generateBlock()
-
+    isAnimationRunning = false
 }
 
 fun numberFor(blockId: Int) = blocks[blockId]!!.number
@@ -282,37 +316,64 @@ fun Stage.showAnimation(
     moves: List<Pair<Int, Position>>,
     merges: List<Triple<Int, Int, Position>>,
     onEnd: () -> Unit
-) = launchImmediately {
-
-    animateSequence {
-        parallel {
-            moves.forEach { (id, pos) ->
-                blocks[id]!!.moveTo(columnX(pos.x), rowY(pos.y), 0.1.seconds, Easing.EASE_OUT)
-            }
-            merges.forEach { (id1, id2, pos) ->
-                sequence {
-                    parallel {
-                        blocks[id1]!!.moveTo(columnX(pos.x), rowY(pos.y), 0.1.seconds, Easing.EASE_OUT)
-                        blocks[id2]!!.moveTo(columnX(pos.x), rowY(pos.y), 0.1.seconds, Easing.EASE_OUT)
-                    }
-                    block {
-                        val nextNumber = numberFor(id1).next()
-                        deleteBlock(id1)
-                        deleteBlock(id2)
-                        createNewBlockWithId(id1, nextNumber, pos)
-                    }
-                    sequenceLazy {
-                        animateScale(blocks[id1]!!)
+) {
+    animator = launchImmediately {
+        animateSequence {
+            parallel {
+                moves.forEach { (id, pos) ->
+                    blocks[id]!!.moveTo(columnX(pos.x), rowY(pos.y), 0.1.seconds, Easing.EASE_OUT)
+                    //if(animator.isCancelled) return@animateSequence
+                }
+                merges.forEach { (id1, id2, pos) ->
+                    sequence {
+                        parallel {
+                            blocks[id1]!!.moveTo(columnX(pos.x), rowY(pos.y), 0.1.seconds, Easing.EASE_OUT)
+                            blocks[id2]!!.moveTo(columnX(pos.x), rowY(pos.y), 0.1.seconds, Easing.EASE_OUT)
+                            //if(animator.isCancelled) return@animateSequence
+                        }
+                        block {
+                            val nextNumber = numberFor(id1).next()
+                            deleteBlock(id1)
+                            deleteBlock(id2)
+                            createNewBlockWithId(id1, nextNumber, pos)
+                            //if(animator.isCancelled) return@block
+                        }
+                        sequenceLazy {
+                            animateScale(blocks[id1]!!)
+                            //if(animator.isCancelled) return@sequenceLazy
+                        }
                     }
                 }
             }
-        }
-        block {
-            onEnd()
+            block {
+                onEnd()
+            }
         }
     }
-}
 
+    moves.forEach {
+        val block = blocks[it.first]
+        val pos = it.second
+        block?.position(columnX(pos.x), rowY(pos.y))
+    }
+
+    merges.forEach {
+        val bl1 = blocks[it.first]
+        val bl2 = blocks[it.second]
+        val pos = it.third
+
+        bl1?.position(columnX(pos.x), rowY(pos.y))
+        bl2?.position(columnX(pos.x), rowY(pos.y))
+    }
+/*
+    for(i in 0..3){
+        for(j in 0..3){
+            val id = map[i,j]
+            val block = blocks[id]
+            block?.position(columnX(i), rowY(j))
+        }
+    }*/
+}
 fun Animator.animateScale(block: Block) {
     val x = block.x
     val y = block.y

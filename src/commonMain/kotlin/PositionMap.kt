@@ -5,7 +5,7 @@ class Position(val x: Int, val y: Int)
 
 class PositionMap(private val array: IntArray2 = IntArray2(4, 4, -1)) {
 
-    private fun getOrNull(x: Int, y: Int) = if (array.get(x, y) != -1) Position(x, y) else null
+    private fun getOrNull(x: Int, y: Int) = if (array[x, y] != -1) Position(x, y) else null
 
     private fun getNumber(x: Int, y: Int) = array.tryGet(x, y)?.let { blocks[it]?.number?.ordinal ?: -1 } ?: -1
 
