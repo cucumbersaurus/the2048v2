@@ -16,30 +16,26 @@ repositories {
 }
 
 dependencies {
-    jvmImplementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
-    jvmImplementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
-    jvmImplementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-    jvmImplementation("org.jetbrains.exposed:exposed-jodatime:$exposedVersion")
-    jvmImplementation("org.xerial:sqlite-jdbc:$jdbcVersion")
-    jvmImplementation("org.slf4j:slf4j-simple:1.7.25")
-    //jvmImplementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    //jvmImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.2")
+    //jvmImplementation("androidx.media:media:1.6.0")
 }
 
 korge {
-	id = "com.cucumbersaurus.the2048"
+    id = "com.cucumbersaurus.the2048"
     name = "2048"
 // To enable all targets at once
 
-	//targetAll()
+    //targetAll()
 
 // To enable targets based on properties/environment variables
-	//targetDefault()
+    //targetDefault()
 
 // To selectively enable targets
 
-	targetJvm()
-	//targetJs()
-	//targetDesktop()
-	//targetIos()
-	//targetAndroidIndirect() // targetAndroidDirect()
+    targetJvm()
+    //targetJs()
+    targetDesktop()
+    //targetIos()
+    //targetAndroidIndirect()
+    //targetAndroidDirect()
 }

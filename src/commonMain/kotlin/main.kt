@@ -3,7 +3,7 @@ import com.soywiz.korev.*
 import com.soywiz.korge.*
 import com.soywiz.korge.animate.*
 import com.soywiz.korge.input.*
-import com.soywiz.korge.time.*
+import com.soywiz.korge.tween.*
 import com.soywiz.korge.view.*
 import com.soywiz.korge.view.roundRect
 import com.soywiz.korim.bitmap.*
@@ -18,11 +18,8 @@ import com.soywiz.korma.geom.vector.*
 import com.soywiz.korma.interpolation.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.async
+import kotlin.collections.set
 import kotlin.random.*
-import com.soywiz.korge.tween.*
-import com.soywiz.korge.view.tween.*
-import com.soywiz.korio.stream.*
-import database.*
 
 lateinit var loadFont : Deferred<Unit>
 lateinit var loadImg : Deferred<Unit>
@@ -31,7 +28,7 @@ var animator : Job = launch(Dispatchers.Main){}
 lateinit var font:TtfFont
 //lateinit var font2:TtfFont
 lateinit var restartImg:Bitmap
-lateinit var undoImg:Bitmap
+//lateinit var undoImg:Bitmap
 
 var cellSize :Double = 0.0
 var fieldSize :Double = 0.0
@@ -44,35 +41,26 @@ var map = PositionMap()
 
 var isAnimationRunning = false
 var isGameOver = false
+var isOnRankingView = false
 
 val score = ObservableProperty(0)
-val best = ObservableProperty(0)
+val ranking = Ranking()
+val best= ObservableProperty(0)
 
 val scaleAnimationList = ArrayList<Int>()
 
-suspend fun main() = Korge(width = 480, height = 640, title = "The2048", bgcolor = RGBA(253, 247, 240)) {
-
-
+suspend fun main() = Korge(width = 680, height = 900, virtualWidth = 480, virtualHeight  = 640, title = "The2048", bgcolor = RGBA(253, 247, 240)) {
 
     loadFont = async{ font = resourcesVfs["bmdh.ttf"].readTtfFont() }
-    loadImg = async {
-        restartImg = resourcesVfs["restart.png"].readBitmap()
-        undoImg = resourcesVfs["undo.png"].readBitmap()
-    }
+    loadImg = async { restartImg = resourcesVfs["restart.png"].readBitmap() }
+
+    ranking.read()
+    print(ranking.best)
+    print(ranking.toList())
 
     score.observe {
         if (it > best.value) best.update(it)
     }
-    best.observe {
-        //TODO: here we'll update the value in the storage
-    }
-
-    Database.connect()
-    Database.writeScore(3, "213")
-    print("----------------------------------\n")
-    print(Database.readScore(1).toString()+"\n")
-    print(BestScoreData.getBest())
-
 
     cellSize = views.virtualWidth/5.0
     fieldSize = 50 + 4 * cellSize
@@ -112,7 +100,8 @@ suspend fun main() = Korge(width = 480, height = 640, title = "The2048", bgcolor
 
     loadImg.await()
     val btnSize = cellSize * 0.3
-    val restartBlock = container {
+    //restart block
+    container {
         val background = roundRect(btnSize, btnSize, 5.0, fill = RGBA(185, 174, 160))
         image(restartImg) {
             size(btnSize * 0.8, btnSize * 0.8)
@@ -122,7 +111,7 @@ suspend fun main() = Korge(width = 480, height = 640, title = "The2048", bgcolor
         alignRightToRightOf(bgField)
 
         onClick {
-            if(isGameOver==false)
+            if(!isGameOver)
             this@Korge.restart()
         }
     }
@@ -151,15 +140,21 @@ suspend fun main() = Korge(width = 480, height = 640, title = "The2048", bgcolor
     text("최고점수", cellSize * 0.2, RGBA(239, 226, 210), font) {
         centerXOn(bgBest)
         alignTopToTopOf(bgBest, 5.0)
+        onOver { color = RGBA(255, 255, 255) }
+        onOut { color = RGBA(239, 226, 210) }
+        onDown { color = RGBA(120, 120, 120) }
+        onUp { color = RGBA(255, 255, 255) }
+        onClick { showRanking(views) }
     }
 
-    text("0", cellSize * 0.3, Colors.WHITE, font) {
+    text(ranking.best.toString(), cellSize * 0.3, Colors.WHITE, font) {
         setTextBounds(Rectangle(10.0, 0.0, bgBest.width, cellSize - 24.0))
         alignment = TextAlignment.MIDDLE_CENTER
         alignTopToTopOf(bgBest, 12.0)
         centerXOn(bgBest)
         best.observe {
-            text = it.toString()
+            text = if(it>ranking.best) it.toString()
+            else ranking.best.toString()
         }
     }
 
@@ -181,21 +176,25 @@ suspend fun main() = Korge(width = 480, height = 640, title = "The2048", bgcolor
 
     keys {
         down {
-            when (it.key) {
-                Key.LEFT -> moveBlocksTo(Direction.LEFT)
-                Key.RIGHT -> moveBlocksTo(Direction.RIGHT)
-                Key.UP -> moveBlocksTo(Direction.TOP)
-                Key.DOWN -> moveBlocksTo(Direction.BOTTOM)
-                else -> Unit
+            if(!isGameOver) {
+                when (it.key) {
+                    Key.LEFT -> moveBlocksTo(Direction.LEFT)
+                    Key.RIGHT -> moveBlocksTo(Direction.RIGHT)
+                    Key.UP -> moveBlocksTo(Direction.TOP)
+                    Key.DOWN -> moveBlocksTo(Direction.BOTTOM)
+                    else -> Unit
+                }
             }
         }
     }
-    onSwipe(20.0) {
-        when (it.direction) {
-            SwipeDirection.LEFT -> moveBlocksTo(Direction.LEFT)
-            SwipeDirection.RIGHT -> moveBlocksTo(Direction.RIGHT)
-            SwipeDirection.TOP -> moveBlocksTo(Direction.TOP)
-            SwipeDirection.BOTTOM -> moveBlocksTo(Direction.BOTTOM)
+    onSwipe(40.0) {
+        if(!isGameOver) {
+            when (it.direction) {
+                SwipeDirection.LEFT -> moveBlocksTo(Direction.LEFT)
+                SwipeDirection.RIGHT -> moveBlocksTo(Direction.RIGHT)
+                SwipeDirection.TOP -> moveBlocksTo(Direction.TOP)
+                SwipeDirection.BOTTOM -> moveBlocksTo(Direction.BOTTOM)
+            }
         }
     }
 }
@@ -226,6 +225,22 @@ fun Container.generateBlock():Int? {
 fun Stage.moveBlocksTo(direction: Direction) {
     if (isAnimationRunning) return
     if(animator.isActive) return
+
+    animator.cancel()
+    isAnimationRunning = true
+
+    val moves = mutableListOf<Pair<Int, Position>>()
+    val merges = mutableListOf<Triple<Int, Int, Position>>()
+    val newMap = calculateNewMap(map.copy(), direction, moves, merges)
+
+    if (map != newMap) {
+        showAnimation(moves, merges, newMap) {
+            val points = merges.sumOf { numberFor(it.first).value }
+            score.update(score.value + points)
+        }
+    }
+    isAnimationRunning = false
+
     if (!map.hasAvailableMoves()) {
         if (!isGameOver) {
             isGameOver = true
@@ -236,21 +251,6 @@ fun Stage.moveBlocksTo(direction: Direction) {
         }
         return
     }
-    animator.cancel()
-    isAnimationRunning = true
-
-    val moves = mutableListOf<Pair<Int, Position>>()
-    val merges = mutableListOf<Triple<Int, Int, Position>>()
-    val newMap = calculateNewMap(map.copy(), direction, moves, merges)
-
-    if (map != newMap) {
-
-        showAnimation(moves, merges, newMap) {
-            val points = merges.sumOf { numberFor(it.first).value }
-            score.update(score.value + points)
-        }
-    }
-    isAnimationRunning = false
 }
 
 fun Container.showGameOver(onRestart: () -> Unit) = container {
@@ -259,9 +259,12 @@ fun Container.showGameOver(onRestart: () -> Unit) = container {
         onRestart()
     }
 
+    val localTime = DateTimeTz.nowLocal()
+    ranking.addRank(localTime, score.value)
+
     position(leftIndent, topIndent)
 
-    roundRect(fieldSize, fieldSize, 5.0, fill = Colors["#DDDDDD55"])
+    roundRect(fieldSize, fieldSize, 5.0, fill = Colors["#BBBBBB77"])
     text("Game Over", 60.0, Colors.BLACK, font) {
         centerBetween(0.0, 0.0, fieldSize, fieldSize)
         y -= 60
@@ -329,18 +332,16 @@ fun Stage.showAnimation(
                     }
                 }
             }
-                var newId: Int? = null
-                map = newMap
-                newId = generateBlock()
+            map = newMap
+            val newId: Int? = generateBlock()
 
-                if(newId!=null){
-                    scaleAnimationList.add(newId)
-                }
+            if(newId!=null){
+                scaleAnimationList.add(newId)
+            }
             parallel {
                 scaleAnimationList.forEach {
                     sequenceLazy {
                         animateScale(blocks[it]!!)
-
                     }
                 }
             }
@@ -379,7 +380,7 @@ fun Animator.animateScale(block: Block) {
     val y = block.y
     val scale = block.scale
 
-    val multiplier = 0.8
+    val multiplier = 0.8////////////////////////////////////////////////////////////////
 
     tween(
         block::x[x - 4*multiplier],
@@ -442,6 +443,18 @@ fun calculateNewMap(
             curPos = map.getNotEmptyPositionFrom(direction, line)
         }
     }
-
     return newMap
+}
+
+
+
+
+fun Container.showRanking(views:Views){
+    /*
+    isOnRankingView = true
+    roundRect(views.virtualWidthDouble, views.virtualHeightDouble, 5.0, fill = Colors["#BBBBBB77"]){
+        this.globalX = 0.0
+        this.globalY = 0.0
+    }
+    */
 }
