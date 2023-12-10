@@ -101,7 +101,7 @@ class GameScene(val p:Korge) : Scene(){
             onOut { color = RGBA(239, 226, 210) }
             onDown { color = RGBA(120, 120, 120) }
             onUp { color = RGBA(255, 255, 255) }
-            onClick { showRanking(views) }
+            onClick { showRanking() }
         }
 
         text(ranking.best.toString(), cellSize * 0.3, Colors.WHITE, font) {

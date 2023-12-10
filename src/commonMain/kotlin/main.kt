@@ -3,9 +3,12 @@ import com.soywiz.korev.*
 import com.soywiz.korge.*
 import com.soywiz.korge.animate.*
 import com.soywiz.korge.input.*
+import com.soywiz.korge.scene.*
 import com.soywiz.korge.tween.*
+import com.soywiz.korge.ui.*
 import com.soywiz.korge.view.*
 import com.soywiz.korge.view.roundRect
+import com.soywiz.korge.view.tween.*
 import com.soywiz.korim.bitmap.*
 import com.soywiz.korim.color.*
 import com.soywiz.korim.font.*
@@ -19,7 +22,11 @@ import com.soywiz.korma.interpolation.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.async
 import kotlin.collections.set
+import kotlin.coroutines.*
 import kotlin.random.*
+
+lateinit var sceneContainer:SceneContainer
+lateinit var st: Stage
 
 lateinit var loadFont : Deferred<Unit>
 lateinit var loadImg : Deferred<Unit>
@@ -41,7 +48,7 @@ var map = PositionMap()
 
 var isAnimationRunning = false
 var isGameOver = false
-var isOnRankingView = false
+var isOnRankingScene = false
 
 val score = ObservableProperty(0)
 val ranking = Ranking()
@@ -49,7 +56,11 @@ val best= ObservableProperty(0)
 
 val scaleAnimationList = ArrayList<Int>()
 
+
 suspend fun main() = Korge(width = 680, height = 900, virtualWidth = 480, virtualHeight  = 640, title = "The2048", bgcolor = RGBA(253, 247, 240)) {
+
+    sceneContainer = sceneContainer()
+    st = this
 
     loadFont = async{ font = resourcesVfs["bmdh.ttf"].readTtfFont() }
     loadImg = async { restartImg = resourcesVfs["restart.png"].readBitmap() }
@@ -119,11 +130,11 @@ suspend fun main() = Korge(width = 680, height = 900, virtualWidth = 480, virtua
     loadFont.await()
     text("2048", cellSize*0.3, Colors.WHITE, font){
         centerXOn(bgLogo)
-        alignBottomToBottomOf(bgLogo, 20)
+        alignTopToTopOf(bgLogo, 25)
     }
-    text("전설의", cellSize*0.2, Colors.WHITE, font){
+    text("by Overflow", cellSize*0.15, Colors.WHITE, font){
         centerXOn(bgLogo)
-        alignTopToTopOf(bgLogo, 15)
+        alignBottomToBottomOf(bgLogo, 20)
     }
 
     text("최고점수", cellSize * 0.2, RGBA(239, 226, 210), font) {
@@ -133,7 +144,7 @@ suspend fun main() = Korge(width = 680, height = 900, virtualWidth = 480, virtua
         onOut { color = RGBA(239, 226, 210) }
         onDown { color = RGBA(120, 120, 120) }
         onUp { color = RGBA(255, 255, 255) }
-        onClick { showRanking(views) }
+        onClick { showRanking() }
     }
 
     text(ranking.best.toString(), cellSize * 0.3, Colors.WHITE, font) {
@@ -165,7 +176,7 @@ suspend fun main() = Korge(width = 680, height = 900, virtualWidth = 480, virtua
 
     keys {
         down {
-            if(!isGameOver) {
+            if(!isGameOver&&!isOnRankingScene) {
                 when (it.key) {
                     Key.LEFT -> moveBlocksTo(Direction.LEFT)
                     Key.RIGHT -> moveBlocksTo(Direction.RIGHT)
@@ -177,7 +188,7 @@ suspend fun main() = Korge(width = 680, height = 900, virtualWidth = 480, virtua
         }
     }
     onSwipe(40.0) {
-        if(!isGameOver) {
+        if(!isGameOver&&!isOnRankingScene) {
             when (it.direction) {
                 SwipeDirection.LEFT -> moveBlocksTo(Direction.LEFT)
                 SwipeDirection.RIGHT -> moveBlocksTo(Direction.RIGHT)
@@ -429,7 +440,14 @@ fun calculateNewMap(
 
 
 
-fun Container.showRanking(views:Views){
+suspend fun Container.showRanking(){
+
+    if(!isOnRankingScene&&!isAnimationRunning) {
+        //isOnRankingScene = true
+        RankingScreen(st)
+    }
+    //sceneContainer.changeTo({RankingScene(st)})
+
     /*
     isOnRankingView = true
     roundRect(views.virtualWidthDouble, views.virtualHeightDouble, 5.0, fill = Colors["#BBBBBB77"]){
@@ -438,3 +456,5 @@ fun Container.showRanking(views:Views){
     }
     */
 }
+
+
