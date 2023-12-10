@@ -115,17 +115,6 @@ suspend fun main() = Korge(width = 680, height = 900, virtualWidth = 480, virtua
             this@Korge.restart()
         }
     }
-    /*
-    val undoBlock = container {
-        val background = roundRect(btnSize, btnSize, 5.0, fill = RGBA(185, 174, 160))
-        image(undoImg) {
-            size(btnSize * 0.6, btnSize * 0.6)
-            centerOn(background)
-        }
-        alignTopToTopOf(restartBlock)
-        alignRightToLeftOf(restartBlock, 5.0)
-    }
-    */
 
     loadFont.await()
     text("2048", cellSize*0.3, Colors.WHITE, font){
@@ -148,7 +137,7 @@ suspend fun main() = Korge(width = 680, height = 900, virtualWidth = 480, virtua
     }
 
     text(ranking.best.toString(), cellSize * 0.3, Colors.WHITE, font) {
-        setTextBounds(Rectangle(10.0, 0.0, bgBest.width, cellSize - 24.0))
+        setTextBounds(Rectangle(0.0, 0.0, bgBest.width, cellSize - 24.0))
         alignment = TextAlignment.MIDDLE_CENTER
         alignTopToTopOf(bgBest, 12.0)
         centerXOn(bgBest)
@@ -164,7 +153,7 @@ suspend fun main() = Korge(width = 680, height = 900, virtualWidth = 480, virtua
     }
 
     text("0", cellSize * 0.3, Colors.WHITE, font) {
-        setTextBounds(Rectangle(10.0, 0.0, bgScore.width, cellSize - 24.0))
+        setTextBounds(Rectangle(0.0, 0.0, bgScore.width, cellSize - 24.0))
         alignment = TextAlignment.MIDDLE_CENTER
         centerXOn(bgScore)
         alignTopToTopOf(bgScore, 12.0)
@@ -259,9 +248,6 @@ fun Container.showGameOver(onRestart: () -> Unit) = container {
         onRestart()
     }
 
-    val localTime = DateTimeTz.nowLocal()
-    ranking.addRank(localTime, score.value)
-
     position(leftIndent, topIndent)
 
     roundRect(fieldSize, fieldSize, 5.0, fill = Colors["#BBBBBB77"])
@@ -293,6 +279,7 @@ fun Container.restart() {
     map = PositionMap()
     blocks.values.forEach { it.removeFromParent() }
     blocks.clear()
+    ranking.addRank(DateTimeTz.nowLocal(), score.value)
     score.update(0)
     generateBlock()
     isAnimationRunning = false
@@ -366,15 +353,8 @@ fun Stage.showAnimation(
         bl1?.position(columnX(pos.x), rowY(pos.y))
         bl2?.position(columnX(pos.x), rowY(pos.y))
     }
-/*
-    for(i in 0..3){
-        for(j in 0..3){
-            val id = map[i,j]
-            val block = blocks[id]
-            block?.position(columnX(i), rowY(j))
-        }
-    }*/
 }
+
 fun Animator.animateScale(block: Block) {
     val x = block.x
     val y = block.y

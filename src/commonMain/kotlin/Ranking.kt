@@ -19,18 +19,14 @@ class Ranking {
     }
 
     fun read(){
-        val vfs = localVfs("ranking.json")
         var jsonString = ""
         try {
-            runBlocking {
-                jsonString = vfs.readString()
-            }
+            runBlocking { jsonString = rankingFile.readString() }
         }
         catch(e: Exception) {
-            runBlocking {
-                vfs.writeString("")
-            }
+            runBlocking { rankingFile.writeString("") }
         }
+
         ranking = try{
             jsonString.fromJson() ?: LinkedHashMap()
         } catch (e: Exception){
@@ -43,12 +39,10 @@ class Ranking {
     }
     private fun save(){
         val jsonString = ranking.toJson(pretty = true)
-        print(jsonString)
-
-        val vfs = localVfs("ranking.json")
+        //print(jsonString)
 
         launch(Dispatchers.Default){
-            vfs.writeString(jsonString)
+            rankingFile.writeString(jsonString)
         }
     }
 
@@ -58,4 +52,8 @@ class Ranking {
     }
     private fun String.fromJson(): LinkedHashMap<String, Int>? = Json.parse(this).fastCastTo()
     private fun Map<*, *>.toJson(pretty: Boolean = false): String = Json.stringify(this, pretty)
+
+    companion object {
+        val rankingFile = localVfs("ranking.json")
+    }
 }
