@@ -63,8 +63,8 @@ suspend fun main() = Korge(width = 680, height = 900, virtualWidth = 480, virtua
     loadImg = async { restartImg = resourcesVfs["restart.png"].readBitmap() }
 
     ranking.read()
-    print(ranking.best)
-    print(ranking.toList())
+    //print(ranking.best)
+    //print(ranking.toList())
 
     score.observe {
         if (it > best.value) best.update(it)

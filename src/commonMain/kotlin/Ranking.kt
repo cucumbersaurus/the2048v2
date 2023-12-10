@@ -39,7 +39,7 @@ class Ranking {
     }
     private fun save(){
         val jsonString = ranking.toJson(pretty = true)
-        print(jsonString)
+        //print(jsonString)
 
         launch(Dispatchers.Default){
             rankingFile.writeString(jsonString)

@@ -18,7 +18,7 @@ class RankingScreen(val st:Stage):Container() {
     val close = winBackground.circle {
         position(388.0, 2.0)
         radius = 5.0
-        color = Colors["#ff5356"]
+        color = Colors["#df6263"]
         zIndex += 3.0
 
 
@@ -41,16 +41,6 @@ class RankingScreen(val st:Stage):Container() {
         for(i in 0 .. 7){
             RankCard(winBackground, title, rankList[i], i)
         }
-//        val r0 = RankCard(winBackground, title, rankList[0], 0)
-//        val r1 = RankCard(winBackground, title, rankList[1], 1)
-//        val r2 = RankCard(winBackground, r1, rankList[2], 2)
-//        val r3 = RankCard(winBackground, r2, rankList[3], 3)
-//        val r4 = RankCard(winBackground, r3, rankList[4], 4)
-//        val r5 = RankCard(winBackground, r4, rankList[5], 5)
-//        val r6 = RankCard(winBackground, r5, rankList[6], 6)
-//        val r7 = RankCard(winBackground, r6, rankList[7], 7)
-//        val r8 = RankCard(winBackground, r7, rankList[8], 8)
-//        val r9 = RankCard(winBackground, r8, rankList[9], 9)
     }
 
     fun closeRanking(){
@@ -95,7 +85,7 @@ class RankCard(val background: Container, val title : Container, val info: Pair<
             return Colors["#9a765b"]
         }
         else{
-            return Colors["#b9aea0"]
+            return Colors["#fdf7f0"]
         }
     }
 }
