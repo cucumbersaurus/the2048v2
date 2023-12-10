@@ -5,10 +5,8 @@ import com.soywiz.korge.animate.*
 import com.soywiz.korge.input.*
 import com.soywiz.korge.scene.*
 import com.soywiz.korge.tween.*
-import com.soywiz.korge.ui.*
 import com.soywiz.korge.view.*
 import com.soywiz.korge.view.roundRect
-import com.soywiz.korge.view.tween.*
 import com.soywiz.korim.bitmap.*
 import com.soywiz.korim.color.*
 import com.soywiz.korim.font.*
@@ -22,7 +20,6 @@ import com.soywiz.korma.interpolation.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.async
 import kotlin.collections.set
-import kotlin.coroutines.*
 import kotlin.random.*
 
 lateinit var sceneContainer:SceneContainer
@@ -48,7 +45,7 @@ var map = PositionMap()
 
 var isAnimationRunning = false
 var isGameOver = false
-var isOnRankingScene = false
+var isOnRankingScreen = false
 
 val score = ObservableProperty(0)
 val ranking = Ranking()
@@ -176,7 +173,7 @@ suspend fun main() = Korge(width = 680, height = 900, virtualWidth = 480, virtua
 
     keys {
         down {
-            if(!isGameOver&&!isOnRankingScene) {
+            if(!isGameOver&&!isOnRankingScreen) {
                 when (it.key) {
                     Key.LEFT -> moveBlocksTo(Direction.LEFT)
                     Key.RIGHT -> moveBlocksTo(Direction.RIGHT)
@@ -188,7 +185,7 @@ suspend fun main() = Korge(width = 680, height = 900, virtualWidth = 480, virtua
         }
     }
     onSwipe(40.0) {
-        if(!isGameOver&&!isOnRankingScene) {
+        if(!isGameOver&&!isOnRankingScreen) {
             when (it.direction) {
                 SwipeDirection.LEFT -> moveBlocksTo(Direction.LEFT)
                 SwipeDirection.RIGHT -> moveBlocksTo(Direction.RIGHT)
@@ -440,21 +437,11 @@ fun calculateNewMap(
 
 
 
-suspend fun Container.showRanking(){
-
-    if(!isOnRankingScene&&!isAnimationRunning) {
-        //isOnRankingScene = true
+fun showRanking(){
+    if(!isOnRankingScreen&&!isAnimationRunning) {
+        isOnRankingScreen = true
         RankingScreen(st)
     }
-    //sceneContainer.changeTo({RankingScene(st)})
-
-    /*
-    isOnRankingView = true
-    roundRect(views.virtualWidthDouble, views.virtualHeightDouble, 5.0, fill = Colors["#BBBBBB77"]){
-        this.globalX = 0.0
-        this.globalY = 0.0
-    }
-    */
 }
 
 

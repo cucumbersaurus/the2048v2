@@ -39,7 +39,7 @@ class Ranking {
     }
     private fun save(){
         val jsonString = ranking.toJson(pretty = true)
-        //print(jsonString)
+        print(jsonString)
 
         launch(Dispatchers.Default){
             rankingFile.writeString(jsonString)
@@ -50,6 +50,9 @@ class Ranking {
         val list = ranking.toList()
         return list.sortedByDescending { it.second }
     }
+
+    fun getTop8():List<Pair<String, Int>> = toList().slice(0..7)
+
     private fun String.fromJson(): LinkedHashMap<String, Int>? = Json.parse(this).fastCastTo()
     private fun Map<*, *>.toJson(pretty: Boolean = false): String = Json.stringify(this, pretty)
 
