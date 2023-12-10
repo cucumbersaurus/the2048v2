@@ -1,8 +1,8 @@
 import com.soywiz.korge.gradle.*
 
 
-val exposedVersion: String by project
-val jdbcVersion : String by project
+//val exposedVersion: String by project
+//val jdbcVersion : String by project
 
 @Suppress("DSL_SCOPE_VIOLATION")
 plugins {
