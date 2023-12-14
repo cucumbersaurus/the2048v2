@@ -29,7 +29,6 @@ replay_pid*
 .gradle
 #build
 build/*
-ranking.json
 deps.kproject.yml
 korge.keystore
 .idea/misc.xml

@@ -20,10 +20,12 @@ import com.soywiz.korma.interpolation.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.async
 import kotlin.collections.set
+import kotlin.coroutines.*
 import kotlin.random.*
 
 lateinit var sceneContainer:SceneContainer
 lateinit var st: Stage
+lateinit var currentCoroutineScope: CoroutineContext
 
 lateinit var loadFont : Deferred<Unit>
 lateinit var loadImg : Deferred<Unit>
@@ -58,6 +60,8 @@ suspend fun main() = Korge(width = 680, height = 900, virtualWidth = 480, virtua
 
     sceneContainer = sceneContainer()
     st = this
+    currentCoroutineScope = coroutineContext
+
 
     loadFont = async{ font = resourcesVfs["bmdh.ttf"].readTtfFont() }
     loadImg = async { restartImg = resourcesVfs["restart.png"].readBitmap() }
@@ -287,7 +291,7 @@ fun Container.restart() {
     map = PositionMap()
     blocks.values.forEach { it.removeFromParent() }
     blocks.clear()
-    ranking.addRank(DateTimeTz.nowLocal(), score.value)
+    ranking.addRank(DateTimeTz.nowLocal(), score.value, currentCoroutineScope)
     score.update(0)
     generateBlock()
     isAnimationRunning = false

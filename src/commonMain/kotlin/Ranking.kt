@@ -6,27 +6,30 @@ import com.soywiz.korio.lang.*
 import com.soywiz.korio.serialization.json.*
 import kotlinx.coroutines.*
 import kotlin.collections.set
+import kotlin.coroutines.*
 
 class Ranking {
 
     private var ranking =  LinkedHashMap<String, Int>()
     var best = 0
 
-    fun addRank(time: DateTimeTz, score: Int){
+    fun addRank(time: DateTimeTz, score: Int, coroutineContext: CoroutineContext){
         val localTime = time.local
 
         ranking[localTime.format(ISO8601.DATE_CALENDAR_COMPLETE) + " " + localTime.time.format(ISO8601.TIME_LOCAL_COMPLETE)]=score
-        save()
+        async(coroutineContext) {save()}
     }
 
-    fun read(){
+    suspend fun read(){
         var jsonString = ""
+        lateinit var loadFile:Deferred<Unit>
         try {
-            runBlocking { jsonString = rankingFile.readString() }
+            loadFile = async(currentCoroutineContext()) { jsonString = rankingFile.readString() }
         }
         catch(e: Exception) {
-            runBlocking { rankingFile.writeString("") }
+            loadFile = async(context = currentCoroutineContext()) { rankingFile.writeString("") }
         }
+        loadFile.await()
 
         ranking = try{
             jsonString.fromJson() ?: LinkedHashMap()
@@ -38,11 +41,11 @@ class Ranking {
             if(e.value>best) best=e.value
         }
     }
-    private fun save(){
+    private suspend fun save(){
         val jsonString = ranking.toJson(pretty = true)
         print(jsonString)
 
-        launch(Dispatchers.Default){
+        launch(currentCoroutineContext()){
             rankingFile.writeString(jsonString)
         }
     }
@@ -63,6 +66,8 @@ class Ranking {
     private fun Map<*, *>.toJson(pretty: Boolean = false): String = Json.stringify(this, pretty)
 
     companion object {
-        val rankingFile = localVfs(SystemProperties["user.dir"] +"/ranking.json")
+        //val rankingFile = localVfs(SystemProperties["user.dir"] +"/ranking.json")
+        val rankingFile = resourcesVfs["ranking.json"]
+
     }
 }

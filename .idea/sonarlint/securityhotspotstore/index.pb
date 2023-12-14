@@ -34,3 +34,5 @@ A
 settings.gradle,0\5\05efc8b1657769a27696d478ded1e95f38737233
 V
 &src/commonMain/kotlin/RankingScreen.kt,0\8\08571647c4612012394b93e84e9ac5924b77fc31
+U
+%src/commonMain/resources/ranking.json,4\3\433b90fe0a2fee81c29ca21ae6e15ee1f40ed159

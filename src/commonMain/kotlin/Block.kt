@@ -7,7 +7,7 @@ class Block(val number: Number) : Container() {
     init {
         roundRect(cellSize, cellSize, 5.0, fill = number.color)
         val textColor = when (number) {
-            Number.ZERO, Number.ONE -> Colors.BLACK
+            ZERO, ONE -> Colors.BLACK
             else -> Colors.WHITE
         }
         text(number.value.toString(), textSizeFor(number)*0.8, textColor, font) {
