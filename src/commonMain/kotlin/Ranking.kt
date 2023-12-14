@@ -2,6 +2,7 @@ import com.soywiz.kds.*
 import com.soywiz.klock.*
 import com.soywiz.korio.async.*
 import com.soywiz.korio.file.std.*
+import com.soywiz.korio.lang.*
 import com.soywiz.korio.serialization.json.*
 import kotlinx.coroutines.*
 import kotlin.collections.set
@@ -39,7 +40,7 @@ class Ranking {
     }
     private fun save(){
         val jsonString = ranking.toJson(pretty = true)
-        //print(jsonString)
+        print(jsonString)
 
         launch(Dispatchers.Default){
             rankingFile.writeString(jsonString)
@@ -51,12 +52,17 @@ class Ranking {
         return list.sortedByDescending { it.second }
     }
 
-    fun getTop8():List<Pair<String, Int>> = toList().slice(0..7)
+    fun getTop8():List<Pair<String, Int>> {
+        val list = toList()
+
+        return if(list.size>=8) list.slice(0..7)
+        else return list
+    }
 
     private fun String.fromJson(): LinkedHashMap<String, Int>? = Json.parse(this).fastCastTo()
     private fun Map<*, *>.toJson(pretty: Boolean = false): String = Json.stringify(this, pretty)
 
     companion object {
-        val rankingFile = localVfs("ranking.json")
+        val rankingFile = localVfs(SystemProperties["user.dir"] +"/ranking.json")
     }
 }

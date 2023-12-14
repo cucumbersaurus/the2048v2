@@ -1,6 +1,7 @@
 import com.soywiz.korge.input.*
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.*
+import kotlin.math.*
 
 class RankingScreen(val st:Stage):Container() {
 
@@ -38,12 +39,12 @@ class RankingScreen(val st:Stage):Container() {
     val rankList = ranking.getTop8()
 
     init{
-        for(i in 0 .. 7){
+        for(i in 0 .. min(7, rankList.size-1)){
             RankCard(winBackground, title, rankList[i], i)
         }
     }
 
-    fun closeRanking(){
+    private fun closeRanking(){
         border.removeFromParent()
         winBackground.removeFromParent()
 

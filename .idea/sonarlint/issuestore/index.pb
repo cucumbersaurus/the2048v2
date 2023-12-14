@@ -1,8 +1,6 @@
 
 ;
 gradlew.bat,2\a\2a45a911a8f1836b0b6c5b758962572012d8f8c3
-R
-"src/commonMain/kotlin/GameScene.kt,5\6\564cefc73fcdbefa56a2844b017326280da46ebf
 @
 build.gradle.kts,d\b\dbcff70658daf80b53ce624f6adcaa529df5ed8d
 T
@@ -34,7 +32,5 @@ A
 .editorconfig,6\2\626a747c8694eaae66f2afb3d1a745b045782c70
 ?
 settings.gradle,0\5\05efc8b1657769a27696d478ded1e95f38737233
-Q
-!src/commonMain/resources/bmdh.fnt,f\2\f2d63fd13f8173ee5cab308bda60d6d1eacfdf0c
 V
 &src/commonMain/kotlin/RankingScreen.kt,0\8\08571647c4612012394b93e84e9ac5924b77fc31
