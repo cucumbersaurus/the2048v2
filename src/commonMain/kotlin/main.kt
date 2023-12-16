@@ -56,7 +56,7 @@ val anim = AnimationScale()
 val scaleAnimationList = ArrayList<Int>()
 
 
-suspend fun main() = Korge(width = 720, height = 960, virtualWidth = (480*uiScale).toInt(), virtualHeight  = (640*uiScale).toInt(), title = "The2048", bgcolor = RGBA(253, 247, 240)) {
+suspend fun main() = Korge(width = 720, height = 960, virtualWidth = (480*uiScale).toInt(), virtualHeight  = (640*uiScale).toInt(), title = "The2048", bgcolor = RGBA(253, 247, 240), icon = resourcesVfs["icon.png"].readBitmap()) {
 
     sceneContainer = sceneContainer()
     st = this

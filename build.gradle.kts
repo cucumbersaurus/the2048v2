@@ -23,6 +23,20 @@ dependencies {
 korge {
     id = "com.cucumbersaurus.the2048"
     name = "2048"
+    version = "0.1"
+    exeBaseName = "app"
+    name = "the2048"
+    description = "simple 2048"
+    orientation = Orientation.PORTRAIT
+
+    authorName = "Cucumbersaurus"
+    authorEmail = "tallcucumber1234@gmail.com"
+    authorHref = "https://github.com/cucumbersaurus"
+
+    icon = File("resources/icon.png")
+    
+    gameCategory = GameCategory.PUZZLE
+
 // To enable all targets at once
 
     //targetAll()
