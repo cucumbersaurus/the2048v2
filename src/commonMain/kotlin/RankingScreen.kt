@@ -3,22 +3,22 @@ import com.soywiz.korge.view.*
 import com.soywiz.korim.color.*
 import kotlin.math.*
 
-class RankingScreen(val st:Stage):Container() {
+class RankingScreen:Container() {
 
-    val border:RoundRect = st.roundRect(404.0, 604.0, 6.0, fill = Colors["#282c34"]) {
-        position((st.views.virtualWidth-404)/2.0, (st.views.virtualHeight-604)/2.0)
+    val border:RoundRect = st.roundRect(404.0*uiScale, 604.0*uiScale, 6.0*uiScale, fill = Colors["#282c34"]) {
+        position((st.views.virtualWidth-404*uiScale)/2.0, (st.views.virtualHeight-604*uiScale)/2.0)
 
         zIndex += 1.0
     }
-    val winBackground = st.roundRect(400.0, 600.0, 5.0, fill = Colors["#f0e4da"]) {
-        position((st.views.virtualWidth-400)/2.0, (st.views.virtualHeight-600)/2.0)
+    val winBackground = st.roundRect(400.0*uiScale, 600.0*uiScale, 5.0*uiScale, fill = Colors["#f0e4da"]) {
+        position((st.views.virtualWidth-400*uiScale)/2.0, (st.views.virtualHeight-600*uiScale)/2.0)
 
         zIndex += 2.0
     }
 
-    val close = winBackground.circle {
-        position(388.0, 2.0)
-        radius = 5.0
+    val closeButton = winBackground.circle {
+        position(380.0*uiScale, 4.0*uiScale)
+        radius = 8.0*uiScale
         color = Colors["#df6263"]
         zIndex += 3.0
 
@@ -30,16 +30,16 @@ class RankingScreen(val st:Stage):Container() {
         onClick { closeRanking() }
     }
 
-    val title = winBackground.text("랭킹", 40.0, Colors["000000"], font){
+    val title = winBackground.text("랭킹", 40.0*uiScale, Colors["000000"], font){
         centerXOn(winBackground)
-        alignTopToTopOf(winBackground, 20.0)
+        alignTopToTopOf(winBackground, 20.0*uiScale)
     }
 
 
-    val rankList = ranking.getTop8()
+    val rankList = ranking.getTop9()
 
     init{
-        for(i in 0 .. min(7, rankList.size-1)){
+        for(i in 0 .. min(8, rankList.size-1)){
             RankCard(winBackground, title, rankList[i], i)
         }
     }
@@ -52,41 +52,50 @@ class RankingScreen(val st:Stage):Container() {
     }
 }
 
-class RankCard(val background: Container, val title : Container, val info: Pair<String, Int>, val rank:Int): Container() {
+class RankCard(private val background: Container, private val title : Container, private val info: Pair<String, Int>, private val rank:Int): Container() {
     init{
-        val card = background.roundRect(350.0, 45.0, 5.0, fill = getColor()){
+        val card = background.roundRect(350.0*uiScale, 45.0*uiScale, 5.0*uiScale, fill = getColor()){
             centerXOn(background)
-            alignTopToBottomOf(title, 12+57*rank)
+            alignTopToBottomOf(title, 12*uiScale+57*uiScale*rank)
         }
 
-        card.text("${rank+1}", 35.0, Colors.BLACK){
-            centerYOn(card)
-            alignLeftToLeftOf(card, 15)
+        if(rank==0){
+            card.image(trophyImg){
+                centerYOn(card)
+                y -= 10*uiScale
+                alignLeftToLeftOf(card, -5*uiScale)
+                size(60*uiScale, 60*uiScale)
+            }
+
+            card.text("${rank+1}", 35.0*uiScale, Colors.BLACK){
+                centerYOn(card)
+                alignLeftToLeftOf(card, 22*uiScale)
+            }
+        }
+        else {
+            card.text("${rank + 1}", 35.0 * uiScale, Colors.BLACK) {
+                centerYOn(card)
+                alignLeftToLeftOf(card, 15 * uiScale)
+            }
         }
 
-        card.text(info.first.split(" ")[0] , 25.0, Colors.BLACK){
+        card.text(info.first.split(" ")[0] , 25.0*uiScale, Colors.BLACK){
             centerYOn(card)
-            alignLeftToLeftOf(card, 55)
+            alignLeftToLeftOf(card, 55*uiScale)
         }
 
-        card.text(info.second.toString() , 35.0, Colors.BLACK){
+        card.text(info.second.toString() , 35.0*uiScale, Colors.BLACK){
             centerYOn(card)
-            alignRightToRightOf(card, 15)
+            alignRightToRightOf(card, 15*uiScale)
         }
     }
 
-    fun getColor(): RGBA {
-        if(rank==0){
-            return Colors["#edd35e"]
-        }
-        else if (rank==1){
-            return Colors["#c4c0b2"]
-        }
-        else if (rank==2){
-            return Colors["#9a765b"]
-        }
-        else{
-            return Colors["#fdf7f0"]
+    private fun getColor(): RGBA {
+        return when (rank) {
+            0 -> Colors["#edd35e"]
+            1 -> Colors["#c4c0b2"]
+            2 -> Colors["#9a765b"]
+            else -> Colors["#fdf7f0"]
         }
     }
 }

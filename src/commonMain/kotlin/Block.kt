@@ -5,7 +5,7 @@ import Number.*
 
 class Block(val number: Number) : Container() {
     init {
-        roundRect(cellSize, cellSize, 5.0, fill = number.color)
+        roundRect(cellSize, cellSize, 5.0*uiScale, fill = number.color)
         val textColor = when (number) {
             ZERO, ONE -> Colors.BLACK
             else -> Colors.WHITE

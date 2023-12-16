@@ -36,3 +36,5 @@ V
 &src/commonMain/kotlin/RankingScreen.kt,0\8\08571647c4612012394b93e84e9ac5924b77fc31
 U
 %src/commonMain/resources/ranking.json,4\3\433b90fe0a2fee81c29ca21ae6e15ee1f40ed159
+S
+#src/commonMain/kotlin/MainScreen.kt,d\6\d65a77686babd6bbe6e044410b39945381c75538
