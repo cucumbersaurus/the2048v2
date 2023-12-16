@@ -1,16 +1,17 @@
 import com.soywiz.korge.input.*
+import com.soywiz.korge.ui.*
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.*
 import kotlin.math.*
 
 class RankingScreen:Container() {
 
-    val border:RoundRect = st.roundRect(404.0*uiScale, 604.0*uiScale, 6.0*uiScale, fill = Colors["#282c34"]) {
+    private val border:RoundRect = st.roundRect(404.0*uiScale, 604.0*uiScale, 6.0*uiScale, fill = Colors["#282c34"]) {
         position((st.views.virtualWidth-404*uiScale)/2.0, (st.views.virtualHeight-604*uiScale)/2.0)
 
         zIndex += 1.0
     }
-    val winBackground = st.roundRect(400.0*uiScale, 600.0*uiScale, 5.0*uiScale, fill = Colors["#f0e4da"]) {
+    private val winBackground = st.roundRect(400.0*uiScale, 600.0*uiScale, 5.0*uiScale, fill = Colors["#f0e4da"]) {
         position((st.views.virtualWidth-400*uiScale)/2.0, (st.views.virtualHeight-600*uiScale)/2.0)
 
         zIndex += 2.0
@@ -22,7 +23,6 @@ class RankingScreen:Container() {
         color = Colors["#df6263"]
         zIndex += 3.0
 
-
         onOver { color =  Colors["#c76667"]}
         onOut { color = Colors["#ff5356"] }
         onDown { color = Colors["#c76667"] }
@@ -30,13 +30,12 @@ class RankingScreen:Container() {
         onClick { closeRanking() }
     }
 
-    val title = winBackground.text("랭킹", 40.0*uiScale, Colors["000000"], font){
+    private val title = winBackground.text("랭킹", 40.0*uiScale, Colors["000000"], font){
         centerXOn(winBackground)
         alignTopToTopOf(winBackground, 20.0*uiScale)
     }
 
-
-    val rankList = ranking.getTop9()
+    private val rankList = ranking.getTop9()
 
     init{
         for(i in 0 .. min(8, rankList.size-1)){

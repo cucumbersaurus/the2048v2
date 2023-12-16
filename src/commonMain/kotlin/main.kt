@@ -1,10 +1,8 @@
 import com.soywiz.klock.*
 import com.soywiz.korev.*
 import com.soywiz.korge.*
-import com.soywiz.korge.animate.*
 import com.soywiz.korge.input.*
 import com.soywiz.korge.scene.*
-import com.soywiz.korge.tween.*
 import com.soywiz.korge.view.*
 import com.soywiz.korge.view.roundRect
 import com.soywiz.korim.bitmap.*
@@ -13,14 +11,13 @@ import com.soywiz.korim.font.*
 import com.soywiz.korim.format.*
 import com.soywiz.korio.async.*
 import com.soywiz.korio.file.std.*
-import com.soywiz.korma.interpolation.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.async
 import kotlin.collections.set
 import kotlin.coroutines.*
 import kotlin.random.*
 
-val uiScale = 1.0
+var uiScale = 2.0
 
 lateinit var sceneContainer:SceneContainer
 lateinit var currentCoroutineScope: CoroutineContext
@@ -35,6 +32,7 @@ lateinit var font:TtfFont
 lateinit var restartImg:Bitmap
 lateinit var leaderboardImg: Bitmap
 lateinit var trophyImg: Bitmap
+lateinit var settingImg: Bitmap
 
 var cellSize :Double = 0.0
 var fieldSize :Double = 0.0
@@ -47,11 +45,13 @@ var freeId = 0
 
 var isAnimationRunning = false
 var isOnRankingScreen = false
+var isOnSettingScreen = false
 var isGameOver = false
 
 val score = ObservableProperty(0)
 val best= ObservableProperty(0)
 val ranking = Ranking()
+val anim = AnimationScale()
 
 val scaleAnimationList = ArrayList<Int>()
 
@@ -62,16 +62,8 @@ suspend fun main() = Korge(width = 720, height = 960, virtualWidth = (480*uiScal
     st = this
     currentCoroutineScope = coroutineContext
 
-
-    loadFont = async{ font = resourcesVfs["bmdh.ttf"].readTtfFont() }
-    loadImg = async {
-        restartImg = resourcesVfs["img/restart.png"].readBitmap()
-        leaderboardImg = resourcesVfs["img/leaderboards.png"].readBitmap()
-        trophyImg = resourcesVfs["img/trophy.png"].readBitmap()
-    }
-
-    ranking.read()
-
+    loadResources()
+    readFiles()
     score.observe {
         if (it > best.value) best.update(it)
     }
@@ -83,11 +75,28 @@ suspend fun main() = Korge(width = 720, height = 960, virtualWidth = (480*uiScal
 
     createScreen()
     generateBlock()
+    registerInputs()
+}
 
+private suspend fun readFiles() {
+    ranking.read()
+    anim.read()
+}
+
+private fun Stage.loadResources() {
+    loadFont = async { font = resourcesVfs["bmdh.ttf"].readTtfFont() }
+    loadImg = async {
+        restartImg = resourcesVfs["img/restart.png"].readBitmap()
+        leaderboardImg = resourcesVfs["img/leaderboards.png"].readBitmap()
+        trophyImg = resourcesVfs["img/trophy.png"].readBitmap()
+        settingImg = resourcesVfs["img/setting.png"].readBitmap()
+    }
+}
+
+private fun Stage.registerInputs() {
     keys {
         down {
-            if(!isGameOver&&!isOnRankingScreen) {
-                println(it.key.name + "   " + isGameOver.toString() + "  " + isAnimationRunning.toString())
+            if (!isGameOver && !isOnRankingScreen && !isOnSettingScreen) {
                 when (it.key) {
                     Key.LEFT -> moveBlocksTo(Direction.LEFT)
                     Key.RIGHT -> moveBlocksTo(Direction.RIGHT)
@@ -99,7 +108,7 @@ suspend fun main() = Korge(width = 720, height = 960, virtualWidth = (480*uiScal
         }
     }
     onSwipe(40.0) {
-        if(!isGameOver&&!isOnRankingScreen) {
+        if (!isGameOver && !isOnRankingScreen && !isOnSettingScreen) {
             when (it.direction) {
                 SwipeDirection.LEFT -> moveBlocksTo(Direction.LEFT)
                 SwipeDirection.RIGHT -> moveBlocksTo(Direction.RIGHT)
@@ -216,95 +225,6 @@ fun numberFor(blockId: Int) = blocks[blockId]!!.number
 
 fun deleteBlock(blockId: Int) = blocks.remove(blockId)!!.removeFromParent()
 
-fun Stage.showAnimation(
-    moves: List<Pair<Int, Position>>,
-    merges: List<Triple<Int, Int, Position>>,
-    newMap: PositionMap,
-    onEnd: () -> Unit
-) {
-    animator = launchImmediately {
-        val multiplier = 0.8//////////////////////////////////////////////////
-        scaleAnimationList.clear()
-
-        animateSequence {
-            parallel {
-                moves.forEach { (id, pos) ->
-                    blocks[id]!!.moveTo(columnX(pos.x), rowY(pos.y), (0.1*multiplier).seconds, Easing.EASE_OUT)
-                }
-                merges.forEach { (id1, id2, pos) ->
-                    sequence {
-                        parallel {
-                            blocks[id1]!!.moveTo(columnX(pos.x), rowY(pos.y), (0.1*multiplier).seconds, Easing.EASE_OUT)
-                            blocks[id2]!!.moveTo(columnX(pos.x), rowY(pos.y), (0.1*multiplier).seconds, Easing.EASE_OUT)
-                        }
-                        block {
-                            val nextNumber = numberFor(id1).next()
-                            deleteBlock(id1)
-                            deleteBlock(id2)
-                            createNewBlockWithId(id1, nextNumber, pos)
-                        }
-                        scaleAnimationList.add(id1)
-                    }
-                }
-            }
-            map = newMap
-            val newId: Int? = generateBlock()
-
-            if(newId!=null){
-                scaleAnimationList.add(newId)
-            }
-            parallel {
-                scaleAnimationList.forEach {
-                    sequenceLazy {
-                        animateScale(blocks[it]!!)
-                    }
-                }
-            }
-            block {
-                onEnd()
-            }
-        }
-    }
-
-    moves.forEach {
-        val block = blocks[it.first]
-        val pos = it.second
-        block?.position(columnX(pos.x), rowY(pos.y))
-    }
-
-    merges.forEach {
-        val bl1 = blocks[it.first]
-        val bl2 = blocks[it.second]
-        val pos = it.third
-
-        bl1?.position(columnX(pos.x), rowY(pos.y))
-        bl2?.position(columnX(pos.x), rowY(pos.y))
-    }
-}
-
-fun Animator.animateScale(block: Block) {
-    val x = block.x
-    val y = block.y
-    val scale = block.scale
-
-    val multiplier = 0.8////////////////////////////////////////////////////////////////
-
-    tween(
-        block::x[x - 4*multiplier],
-        block::y[y - 4*multiplier],
-        block::scale[scale + 0.1*multiplier],
-        time = (0.1*multiplier).seconds,
-        easing = Easing.EASE_IN
-    )
-    tween(
-        block::x[x],
-        block::y[y],
-        block::scale[scale],
-        time = (0.1*multiplier).seconds,
-        easing = Easing.EASE_OUT
-    )
-}
-
 fun calculateNewMap(
     map: PositionMap,
     direction: Direction,
@@ -351,13 +271,6 @@ fun calculateNewMap(
         }
     }
     return newMap
-}
-
-fun showRanking(){
-    if(!isOnRankingScreen&&!isAnimationRunning) {
-        isOnRankingScreen = true
-        RankingScreen()
-    }
 }
 
 

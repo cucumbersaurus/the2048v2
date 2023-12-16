@@ -49,7 +49,7 @@ private fun Stage.crateContainers() {
         }
 
         bgScore = roundRect(cellSize * 1.5, cellSize * 0.8, 5.0*uiScale, fill = Colors["bbae9e"]) {
-            alignRightToLeftOf(bgBest, 24)
+            alignRightToLeftOf(bgBest, 24*uiScale)
             alignTopToTopOf(bgLogo)
         }
     }
@@ -104,13 +104,13 @@ private suspend fun Stage.createButtons() {
     val btnSize = cellSize * 0.3
 
     with (st) {
-        val restartBlock = container {
+        val restartButton = container {
             val background = roundRect(btnSize, btnSize, 5.0*uiScale, fill = RGBA(185, 174, 160))
             image(restartImg) {
                 size(btnSize * 0.8, btnSize * 0.8)
                 centerOn(background)
             }
-            alignTopToBottomOf(bgBest, 5)
+            alignTopToBottomOf(bgBest, 5*uiScale)
             alignRightToRightOf(bgField)
 
             onClick {
@@ -119,16 +119,42 @@ private suspend fun Stage.createButtons() {
             }
         }
 
-        val rankingBlock = container {
+        val rankingButton = container {
             val leaderboardBlock = roundRect(btnSize, btnSize, 5.0*uiScale, fill = RGBA(185, 174, 160))
             image(leaderboardImg) {
                 size(btnSize * 0.8, btnSize * 0.8)
                 centerOn(leaderboardBlock)
             }
-            alignTopToBottomOf(bgBest, 5)
-            alignRightToLeftOf(restartBlock, 5)
+            alignTopToBottomOf(bgBest, 5*uiScale)
+            alignRightToLeftOf(restartButton, 5*uiScale)
 
             onClick { showRanking() }
         }
+
+        val settingButton = container {
+            val leaderboardBlock = roundRect(btnSize, btnSize, 5.0*uiScale, fill = RGBA(185, 174, 160))
+            image(settingImg) {
+                size(btnSize * 0.8, btnSize * 0.8)
+                centerOn(leaderboardBlock)
+            }
+            alignTopToBottomOf(bgBest, 5*uiScale)
+            alignRightToLeftOf(rankingButton, 5*uiScale)
+
+            onClick { showSetting() }
+        }
+    }
+}
+
+fun showRanking(){
+    if(!isOnSettingScreen&&!isOnRankingScreen&&!isAnimationRunning) {
+        isOnRankingScreen = true
+        RankingScreen()
+    }
+}
+
+fun showSetting(){
+    if(!isOnSettingScreen&&!isOnRankingScreen&&!isAnimationRunning) {
+        isOnSettingScreen = true
+        SettingScreen()
     }
 }

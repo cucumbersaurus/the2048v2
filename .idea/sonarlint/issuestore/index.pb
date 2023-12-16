@@ -38,3 +38,11 @@ U
 %src/commonMain/resources/ranking.json,4\3\433b90fe0a2fee81c29ca21ae6e15ee1f40ed159
 S
 #src/commonMain/kotlin/MainScreen.kt,d\6\d65a77686babd6bbe6e044410b39945381c75538
+W
+'src/commonMain/kotlin/BlockAnimation.kt,0\6\06bbfb9ba4e326eac292411c7ce08532a72bc120
+V
+&src/commonMain/kotlin/SettingScreen.kt,6\c\6c90e6ba1496ba29aaa081b1afa0da97496e9edd
+P
+ src/commonMain/kotlin/Setting.kt,0\6\0669e4569087f13e00ef8e0a5ddd3f6ae5a21e39
+W
+'src/commonMain/resources/animation.json,b\c\bc78093d63fbbf90f6a356b5a99c87e94953fec7
