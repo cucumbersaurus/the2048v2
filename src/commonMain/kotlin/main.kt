@@ -107,7 +107,7 @@ private fun Stage.registerInputs() {
             }
         }
     }
-    onSwipe(40.0) {
+    onSwipe(80.0*uiScale) {
         if (!isGameOver && !isOnRankingScreen && !isOnSettingScreen) {
             when (it.direction) {
                 SwipeDirection.LEFT -> moveBlocksTo(Direction.LEFT)

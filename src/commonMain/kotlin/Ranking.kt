@@ -1,6 +1,8 @@
 import com.soywiz.kds.*
 import com.soywiz.klock.*
+import com.soywiz.korge.debug.*
 import com.soywiz.korio.async.*
+import com.soywiz.korio.file.*
 import com.soywiz.korio.file.std.*
 import com.soywiz.korio.serialization.json.*
 import kotlinx.coroutines.*
@@ -21,11 +23,14 @@ class Ranking {
     suspend fun read(){
         var jsonString = "{}"
         lateinit var loadFile:Deferred<Unit>
-        try {
+        if(rankingFile.exists()){
             loadFile = async(currentCoroutineContext()) { jsonString = rankingFile.readString() }
         }
-        catch(e: Exception) {
-            loadFile = async(currentCoroutineContext()) { rankingFile.writeString("") }
+        else{
+            loadFile = async(currentCoroutineContext()) {
+                rankingFile.vfs.put(rankingFile.path, rankingFile.open(VfsOpenMode.CREATE))
+                rankingFile.writeString("")
+            }
         }
         loadFile.await()
 
@@ -59,7 +64,7 @@ class Ranking {
     private fun Map<*, *>.toJson(pretty: Boolean = false): String = Json.stringify(this, pretty)
 
     companion object {
-        val rankingFile = resourcesVfs["ranking.json"]
+        val rankingFile = applicationDataVfs["ranking.json"]
 
     }
 }

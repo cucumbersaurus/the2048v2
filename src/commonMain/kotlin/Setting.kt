@@ -4,6 +4,7 @@ import com.soywiz.korge.ui.*
 import com.soywiz.korge.view.*
 import com.soywiz.korim.color.*
 import com.soywiz.korio.async.*
+import com.soywiz.korio.file.*
 import com.soywiz.korio.file.std.*
 import com.soywiz.korio.serialization.json.*
 import kotlinx.coroutines.*
@@ -87,11 +88,12 @@ class AnimationScale{
     suspend fun read(){
         var jsonString = ""
         lateinit var loadFile: Deferred<Unit>
-        try {
+        if(animationFile.exists()) {
             loadFile = async(currentCoroutineContext()) { jsonString = animationFile.readString() }
         }
-        catch(e: Exception) {
+        else {
             loadFile = async(currentCoroutineContext()) {
+                animationFile.vfs.put(animationFile.path, animationFile.open(VfsOpenMode.CREATE))
                 animationFile.writeString(
                     "{\n" +
                         "  \"move\": \"1.0\",\n" +
@@ -117,7 +119,7 @@ class AnimationScale{
     private fun Map<*, *>.toJson(pretty: Boolean = false): String = Json.stringify(this, pretty)
 
     companion object {
-        val animationFile = resourcesVfs["animation.json"]
+        val animationFile = applicationDataVfs["animation.json"]
 
     }
 }

@@ -89,8 +89,8 @@ fun Animator.animateScale(block: Block) {
     val scale = block.scale
 
     tween(
-        block::x[x - if(scaleAnimationScale!=0.0) 4 else 0],
-        block::y[y - if(scaleAnimationScale!=0.0) 4 else 0],
+        block::x[x - if(scaleAnimationScale!=0.0) 4*uiScale else 0.0],
+        block::y[y - if(scaleAnimationScale!=0.0) 4*uiScale else 0.0],
         block::scale[scale + if(scaleAnimationScale!=0.0) 0.1 else 0.0],
         time = (0.1 * scaleAnimationScale).seconds,
         easing = Easing.EASE_IN
