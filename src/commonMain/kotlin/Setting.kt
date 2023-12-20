@@ -47,7 +47,7 @@ class SettingScreen: Container() {
         alignTopToTopOf(title, 100.0*uiScale)
     }
 
-    private val moveAnimationScaleSlider = winBackground.uiSlider(value = if(moveAnimationScale==0.0) 0.0 else ln(moveAnimationScale)+1, min = 0.0, max = 10.0, step = 0.01, ) {
+    private val moveAnimationScaleSlider = winBackground.uiSlider(value = if(moveAnimationScale==0.0) 0.0 else ln(moveAnimationScale + 1), min = 0.0, max = 5.0, step = 0.01, ) {
         size(300*uiScale, 30*uiScale)
         centerXOn(winBackground)
         alignTopToTopOf(moveAnimationScaleSliderName, 50*uiScale)
@@ -62,7 +62,7 @@ class SettingScreen: Container() {
         alignTopToTopOf(moveAnimationScaleSlider, 100.0*uiScale)
     }
 
-    private val sizeAnimationScaleSlider = winBackground.uiSlider(value = if(scaleAnimationScale==0.0) 0.0 else ln(scaleAnimationScale)+1, min = 0.0, max = 10.0, step = 0.01) {
+    private val sizeAnimationScaleSlider = winBackground.uiSlider(value = if(scaleAnimationScale==0.0) 0.0 else ln(scaleAnimationScale + 1), min = 0.0, max = 5.0, step = 0.01) {
         size(300*uiScale, 30*uiScale)
         centerXOn(winBackground)
         alignTopToTopOf(sizeAnimationScaleSliderName, 50*uiScale)
@@ -70,6 +70,22 @@ class SettingScreen: Container() {
         changed {
             scaleAnimationScale = if(it==0.0) 0.0 else exp(it-1)
         }
+    }
+
+    private val randomAnimationScale = winBackground.text("랜덤 애니메이션 속도", 20.0*uiScale, Colors["000000"], font){
+        centerXOn(winBackground)
+        alignTopToTopOf(sizeAnimationScaleSlider, 100.0*uiScale)
+    }
+
+    private val randomAnimationsScale = winBackground.uiCheckBox(checked = isOnRandomAnimationSpeedMode, text = "눌러서 활성화"){
+        size(30*uiScale, 30*uiScale)
+        centerXOn(winBackground)
+        alignTopToTopOf(randomAnimationScale, 50*uiScale)
+        onChange.add {
+            isOnRandomAnimationSpeedMode =  it.checked
+        }
+
+
     }
 
     private fun closeSetting(){
@@ -94,11 +110,11 @@ class AnimationScale{
         else {
             loadFile = async(currentCoroutineContext()) {
                 animationFile.vfs.put(animationFile.path, animationFile.open(VfsOpenMode.CREATE))
-                animationFile.writeString(
-                    "{\n" +
-                        "  \"move\": \"1.0\",\n" +
-                        "  \"scale\": \"1.0\"\n" +
-                        "}\n")}
+                animationFile.writeString("{\n" +
+                    "\t\"move\": \"1.0\",\n" +
+                    "\t\"scale\": \"1.0\",\n" +
+                    "  \"random\" : \"true\"\n" +
+                    "}\n")}
         }
         loadFile.await()
         anim = try{ jsonString.fromJson() ?: LinkedHashMap() }
@@ -106,11 +122,14 @@ class AnimationScale{
 
         moveAnimationScale = anim["move"]?.toDoubleOrNull()?:1.0
         scaleAnimationScale = anim["scale"]?.toDoubleOrNull()?:1.0
+        isOnRandomAnimationSpeedMode = anim["random"]?.toBoolean()?:false
     }
 
     fun save(){
         anim["move"] = moveAnimationScale.toString()
         anim["scale"] = scaleAnimationScale.toString()
+        anim["random"] = isOnRandomAnimationSpeedMode.toString()
+
         val jsonString = anim.toJson(pretty = true)
         async(currentCoroutineScope){ animationFile.writeString(jsonString) }
     }
@@ -119,7 +138,6 @@ class AnimationScale{
     private fun Map<*, *>.toJson(pretty: Boolean = false): String = Json.stringify(this, pretty)
 
     companion object {
-        val animationFile = applicationDataVfs["animation.json"]
-
+        val animationFile = localCurrentDirVfs["animation.json"]
     }
 }

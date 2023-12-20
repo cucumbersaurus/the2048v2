@@ -47,6 +47,7 @@ var isAnimationRunning = false
 var isOnRankingScreen = false
 var isOnSettingScreen = false
 var isGameOver = false
+var isOnRandomAnimationSpeedMode = false
 
 val score = ObservableProperty(0)
 val best= ObservableProperty(0)

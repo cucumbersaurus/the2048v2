@@ -44,3 +44,5 @@ P
  src/commonMain/kotlin/Setting.kt,0\6\0669e4569087f13e00ef8e0a5ddd3f6ae5a21e39
 W
 'src/commonMain/resources/animation.json,b\c\bc78093d63fbbf90f6a356b5a99c87e94953fec7
+>
+animation.json,1\0\10653ab529229a9e0de249e30571cda56a7bb0a0

@@ -64,7 +64,7 @@ class Ranking {
     private fun Map<*, *>.toJson(pretty: Boolean = false): String = Json.stringify(this, pretty)
 
     companion object {
-        val rankingFile = applicationDataVfs["ranking.json"]
+        val rankingFile = localCurrentDirVfs["ranking.json"]
 
     }
 }
